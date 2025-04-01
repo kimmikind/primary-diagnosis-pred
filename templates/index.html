@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primary Diagnosis Prediction API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        .api-info {
+            background-color: #eaf2f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-family: monospace;
+        }
+        .logo {
+            font-size: 2.5rem;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🩺</div>
+        <h1>Primary Diagnosis Prediction</h1>
+        <p>Medical diagnostic prediction API for mobile applications</p>
+        
+        <div class="api-info">
+            <strong>API Endpoint:</strong><br>
+            POST https://primary-diagnosis-pred.onrender.com/predict<br>
+            <strong>Request Body:</strong> {"symptoms": "itching,headache"}
+        </div>
+    </div>
+</body>
+</html>
