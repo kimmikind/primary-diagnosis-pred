@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pickle
 import pandas as pd
 import numpy as np
@@ -10,18 +10,18 @@ import xgboost as xgb
 app = Flask(__name__)
 
 # Загрузка модели и датасетов 
-with open('C:/datasets/model/xgb.pkl', 'rb') as f:
+with open('model/xgb.pkl', 'rb') as f:
     xgb = pickle.load(f)
     
 # Загрузка датасетов
 def load_datasets():
     try:
-        description = pd.read_csv('C:/datasets/description.csv')
-        precautions = pd.read_csv('C:/datasets/precautions_df.csv')
-        workout = pd.read_csv('C:/datasets/workout_df.csv')
-        medications = pd.read_csv('C:/datasets/medications.csv')
-        diets = pd.read_csv('C:/datasets/diets.csv')
-        symp_severity = pd.read_csv('C:/datasets/Symptom-severity.csv')
+        description = pd.read_csv('datasets/description.csv')
+        precautions = pd.read_csv('datasets/precautions_df.csv')
+        workout = pd.read_csv('datasets/workout_df.csv')
+        medications = pd.read_csv('datasets/medications.csv')
+        diets = pd.read_csv('datasets/diets.csv')
+        symp_severity = pd.read_csv('datasets/Symptom-severity.csv')
         
         return description, precautions, workout, medications, diets, symp_severity
     except Exception as e:
@@ -306,6 +306,11 @@ def predict():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/")
+def home():
+    return render_template('index.html')
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000)
