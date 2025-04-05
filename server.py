@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 # Модель для анализа симптомов
 try:
-    with open('C:/datasets/model/xgb.pkl', 'rb') as f:
+    with open('model/xgb.pkl', 'rb') as f:
         symptoms_model = pickle.load(f)
 except Exception as e:
     print(f"Error loading symptoms model: {e}")
@@ -19,11 +19,11 @@ except Exception as e:
 
 try:
     # Модель для анализа крови
-    with open('C:/datasets/model/xgb_blood.pkl', 'rb') as f:
+    with open('model/xgb_blood.pkl', 'rb') as f:
         blood_model = pickle.load(f)
     
     # Scaler для модели крови
-    with open('C:/datasets/model/blood_scaler.pkl', 'rb') as f:
+    with open('model/blood_scaler.pkl', 'rb') as f:
         blood_scaler = pickle.load(f)
     
     # Загрузка колонок (можно сохранить и загрузить отдельно)
