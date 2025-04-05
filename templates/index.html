@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             text-align: center;
         }
         .container {
@@ -21,7 +21,8 @@
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 40px;
-            max-width: 600px;
+            max-width: 800px;
+            margin: 20px;
         }
         h1 {
             color: #2c3e50;
@@ -35,26 +36,67 @@
             background-color: #eaf2f8;
             padding: 15px;
             border-radius: 8px;
-            margin-top: 30px;
+            margin: 20px 0;
             font-family: monospace;
+            text-align: left;
         }
         .logo {
             font-size: 2.5rem;
             color: #3498db;
             margin-bottom: 10px;
         }
+        .model-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .model-section:last-child {
+            border-bottom: none;
+        }
+        .model-title {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        strong {
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">🩺</div>
-        <h1>Primary Diagnosis Prediction</h1>
-        <p>Medical diagnostic prediction API for mobile applications</p>
+        <h1>API для предсказания первичного диагноза</h1>
+        <p>Медицинский API для предсказания диагноза с двумя специализированными моделями</p>
+        
+        <div class="model-section">
+            <h2 class="model-title">Модель диагностики по симптомам</h2>
+            <p>Предсказывает заболевания на основе симптомов пациента</p>
+            <div class="api-info">
+                <strong>API Endpoint:</strong><br>
+                POST /predict_symptoms<br>
+                <strong>Request Body:</strong> {"symptoms": "itching,headache,cough"}<br>
+                <strong>Response Includes:</strong> Predicted disease, probability, description, precautions, medications, diet recommendations, and workout suggestions
+            </div>
+            <p>Внимание: Симптомы должны быть введены на английском языке через запятую</p>
+        </div>
+        
+        <div class="model-section">
+            <h2 class="model-title">Модель анализа медицинских показателей</h2>
+            <p>Предсказывает состояния на основе лабораторных анализов</p>
+            <div class="api-info">
+                <strong>API Endpoint:</strong><br>
+                POST /predict_blood<br>
+                <strong>Request Body:</strong> {"blood_values": {"Glucose": 0.52, "Hemoglobin": 0.65, "Platelets": 0.72}}<br>
+                <strong>Available Parameters:</strong> Glucose, Cholesterol, Hemoglobin, Platelets, White Blood Cells, Red Blood Cells, Hematocrit, Mean Corpuscular Volume, Mean Corpuscular Hemoglobin, Mean Corpuscular Hemoglobin Concentration, Insulin, BMI, Systolic Blood Pressure, Diastolic Blood Pressure, Triglycerides, HbA1c, LDL Cholesterol, HDL Cholesterol, ALT, AST, Heart Rate, Creatinine, Troponin, C-reactive Protein<br>
+                <strong>Response Includes:</strong> Diagnosis, confidence score, and recommended follow-up tests
+            </div>
+            <p>Примечание: Все параметры должны быть указаны на английском языке</p>
+        </div>
         
         <div class="api-info">
-            <strong>API Endpoint:</strong><br>
-            POST https://primary-diagnosis-pred.onrender.com/predict<br>
-            <strong>Request Body:</strong> {"symptoms": "itching,headache"}
+            <strong>Health Check Endpoint:</strong><br>
+            GET /health<br>
+            Возвращает статус сервера и информацию о загруженных моделях
         </div>
     </div>
 </body>
