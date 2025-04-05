@@ -44,12 +44,12 @@ except Exception as e:
 # Загрузка датасетов
 def load_datasets():
     try:
-        description = pd.read_csv('C:/datasets/description.csv')
-        precautions = pd.read_csv('C:/datasets/precautions_df.csv')
-        workout = pd.read_csv('C:/datasets/workout_df.csv')
-        medications = pd.read_csv('C:/datasets/medications.csv')
-        diets = pd.read_csv('C:/datasets/diets.csv')
-        symp_severity = pd.read_csv('C:/datasets/Symptom-severity.csv')
+        description = pd.read_csv('datasets/description.csv')
+        precautions = pd.read_csv('datasets/precautions_df.csv')
+        workout = pd.read_csv('datasets/workout_df.csv')
+        medications = pd.read_csv('datasets/medications.csv')
+        diets = pd.read_csv('datasets/diets.csv')
+        symp_severity = pd.read_csv('datasets/Symptom-severity.csv')
         
         return description, precautions, workout, medications, diets, symp_severity
     except Exception as e:
