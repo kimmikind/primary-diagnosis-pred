@@ -323,7 +323,7 @@ def given_predicted_value(patient_symptoms: List[str]) -> Tuple[str, str]:
     try:
         input_vector = np.zeros(len(symptoms_dict))
         for item in patient_symptoms:
-            item_clean = item.strip().lower().replace(' ', '_')
+            item_clean = item.strip().lower()
             if item_clean in symptoms_dict:
                 input_vector[symptoms_dict[item_clean]] = 1
         
