@@ -275,6 +275,22 @@ NORMAL_RANGES = {
 class SymptomsRequest(BaseModel):
     symptoms: str
 
+def validate_symptoms(user_input: str) -> Tuple[List[str], List[str]]:
+    """Проверяет введенные симптомы на валидность"""
+    valid_symptoms = []
+    invalid_symptoms = []
+    
+    # Разделяем ввод и очищаем симптомы
+    input_symptoms = [s.strip().lower() for s in user_input.split(',') if s.strip()]
+    
+    for symptom in input_symptoms:
+        if symptom in symptoms_dict:
+            valid_symptoms.append(symptom)
+        else:
+            invalid_symptoms.append(symptom)
+    
+    return valid_symptoms, invalid_symptoms
+
 def helper(dis: str) -> Tuple[str, List[str], List[str], List[str], List[str]]:
     """Функция для получения описания болезни, рекомендаций, лекарств, диеты и упражнений"""
     try:
@@ -490,11 +506,30 @@ def predict_symptoms():
         data = request.get_json()
         if 'symptoms' not in data:
             return jsonify({"error": "Missing 'symptoms' field"}), 400
-            
-        user_symptoms = [s.strip() for s in data['symptoms'].split(',')]
-        user_symptoms = [symptom.strip("[]' ") for symptom in user_symptoms]
+
+        # Проверяем валидность симптомов
+        valid_symptoms, invalid_symptoms = validate_symptoms(data['symptoms'])
         
-        predicted_disease, probability = given_predicted_value(user_symptoms)
+        if invalid_symptoms:
+            return jsonify({
+                "warning": f"These symptoms are invalid and will be ignored: {', '.join(invalid_symptoms)}",
+                "valid_symptoms": valid_symptoms
+            }), 200
+        
+        if not valid_symptoms:
+            return jsonify({"error": "No valid symptoms entered. Please check your input."}), 400
+            
+        predicted_disease, probability = given_predicted_value(valid_symptoms)
+        
+        # Проверка достоверности предсказания
+        confidence = float(probability.strip('%'))
+        if confidence < 10.0:
+            return jsonify({
+                "warning": "Low prediction confidence. The result may be unreliable.",
+                "predicted_disease": predicted_disease,
+                "probability": probability
+            }), 200
+        
         desc, pre, med, die, wrkout = helper(predicted_disease)
         
         response = {
