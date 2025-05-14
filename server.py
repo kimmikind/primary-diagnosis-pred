@@ -542,7 +542,7 @@ def predict_symptoms():
             return jsonify({
                 "warning": f"Следующие симптомы будут проигнорированы (не распознаны): {', '.join(invalid_symptoms)}",
                 "valid_symptoms": valid_symptoms
-            }), 200
+            }), 400
         
         if not valid_symptoms:
             return jsonify({"error": "Не введено ни одного распознаваемого симптома"}), 400
@@ -550,12 +550,12 @@ def predict_symptoms():
         predicted_disease, probability = given_predicted_value(valid_symptoms)
         
         confidence = float(probability.strip('%'))
-        if confidence < 10.0:
+        if confidence < 5.0:
             return jsonify({
                 "warning": "Низкая достоверность предсказания. Результат может быть ненадежным.",
                 "predicted_disease": predicted_disease,
                 "probability": probability
-            }), 200
+            }), 400
         
         desc, pre, med, die, wrkout = helper(predicted_disease)
         
