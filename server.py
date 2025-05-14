@@ -373,15 +373,15 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
                     abnormal_features.add(feat)
         
         # 3. Специальные правила для явных случаев
-        # Thalasse (низкий MCV + низкий Hb)
+        # Талассемия (низкий MCV + низкий Hb)
         if ('Mean Corpuscular Volume' in abnormal_features and input_values['Mean Corpuscular Volume'] <= 0.35) and \
            ('Hemoglobin' in abnormal_features and input_values['Hemoglobin'] <= 0.5):
-            return "Thalasse", 0.95, ["Hemoglobin Electrophoresis", "Iron Studies", "Genetic Testing"]
+            return "Талассемия", 0.95, get_recommendations('Thalasse', input_values.keys())
         
-        # Thromboc (низкие тромбоциты + воспаление)
+        # Тромбоцитопения (низкие тромбоциты + воспаление)
         if ('Platelets' in abnormal_features and input_values['Platelets'] < 0.3) and \
            ('C-reactive Protein' in abnormal_features and input_values['C-reactive Protein'] > 0.4):
-            return "Thromboc", 0.9, ["Coagulation Tests", "D-Dimer", "Hematologist Consultation"]
+            return "Тромбоцитопения", 0.9, get_recommendations('Thromboc', input_values.keys())
         
         # Анемия (низкий Hb или RBC или Hct)
         anemia_markers = {'Hemoglobin', 'Red Blood Cells', 'Hematocrit'}
@@ -389,19 +389,19 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
             if (('Hemoglobin' in abnormal_features and input_values['Hemoglobin'] < 0.45) or \
                ('Red Blood Cells' in abnormal_features and input_values['Red Blood Cells'] < 0.45) or \
                ('Hematocrit' in abnormal_features and input_values['Hematocrit'] < 0.4)):
-                return "Anemia", 0.92, ["Ferritin", "Vitamin B12", "Hematologist Consultation"]
+                return "Анемия", 0.92, get_recommendations('Anemia', input_values.keys())
         
-        # Heart Di (высокий тропонин + аномальный пульс)
+        # Сердечная недостаточность (высокий тропонин + аномальный пульс)
         if ('Troponin' in abnormal_features and input_values['Troponin'] > 0.65) and \
            ('Heart Rate' in abnormal_features and (input_values['Heart Rate'] < 0.4 or input_values['Heart Rate'] > 0.85)):
-            return "Heart Di", 0.93, ["EKG", "Cardiac Enzymes", "Cardiologist Consultation"]
+            return "Сердечная недостаточность", 0.93, get_recommendations('Heart Di', input_values.keys())
         
-        # Diabetes (высокий глюкоз или HbA1c)
+        # Диабет (высокий глюкоз или HbA1c)
         diabetes_markers = {'Glucose', 'HbA1c'}
         if any(m in abnormal_features for m in diabetes_markers):
             if (('Glucose' in abnormal_features and input_values['Glucose'] > 0.65) or \
                ('HbA1c' in abnormal_features and input_values['HbA1c'] > 0.55)):
-                return "Diabetes", 0.94, ["Urine Analysis", "Triglycerides", "Endocrinologist Consultation"]
+                return "Диабет", 0.94, get_recommendations('Diabetes', input_values.keys())
         
         # 4. Пограничные состояния
         # Пограничная анемия (требуем 2+ маркера)
@@ -414,9 +414,9 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
             anemia_borderline += 1
             
         if anemia_borderline >= 2:
-            return "Пограничное состояние (Anemia)", 0.7, ["Iron Tests", "Follow-up in 1 Month"]
+            return "Пограничная анемия", 0.7, get_recommendations('Пограничное состояние (Anemia)', input_values.keys())
         
-        # Пограничный диабет (требуем оба показателя)
+        # Предиабет (требуем оба показателя)
         diabetes_borderline = 0
         if 'Glucose' in input_values and 0.55 <= input_values['Glucose'] <= 0.65:
             diabetes_borderline += 1
@@ -424,7 +424,7 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
             diabetes_borderline += 1
             
         if diabetes_borderline >= 2:
-            return "Пограничное состояние (Diabetes)", 0.75, ["Repeat Glucose Test", "Endocrinologist Consultation"]
+            return "Предиабет", 0.75, get_recommendations('Пограничное состояние (Diabetes)', input_values.keys())
         
         # Пограничное кардио
         cardio_markers = {'Cholesterol', 'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Troponin'}
@@ -432,11 +432,11 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
             if (('Cholesterol' in abnormal_features and input_values['Cholesterol'] > 0.52) or \
                ('Systolic Blood Pressure' in abnormal_features and input_values['Systolic Blood Pressure'] > 0.65) or \
                ('Troponin' in abnormal_features and 0.5 < input_values['Troponin'] <= 0.65)):
-                return "Пограничное состояние (Cardio)", 0.7, ["Lipid Profile", "Cardiologist Consultation"]
+                return "Пограничное состояние (сердечно-сосудистая система)", 0.7, get_recommendations('Пограничное состояние (Cardio)', input_values.keys())
         
         # 5. Если все показатели в норме
         if normal_count == len(input_values):
-            return "Healthy", 0.96, ["Annual Checkup"]
+            return "Здоров", 0.96, get_recommendations('Healthy', input_values.keys())
         
         # 6. Подготовка данных для модели
         input_vector = np.zeros((1, len(blood_features)))
@@ -460,22 +460,22 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
         
         # Пост-обработка результатов модели
         if diagnosis == "Anemia" and not any(m in input_values for m in anemia_markers):
-            return "Неопределенный результат", confidence, ["Complete Blood Count"]
+            return "Неопределенный результат", confidence, ["Полный анализ крови"]
         
         if diagnosis == "Diabetes" and not any(m in input_values for m in diabetes_markers):
-            return "Неопределенный результат", confidence, ["Glucose Tolerance Test"]
+            return "Неопределенный результат", confidence, ["Тест на толерантность к глюкозе"]
         
         if diagnosis == "Heart Di" and 'Troponin' not in input_values:
-            return "Неопределенный результат", confidence, ["Cardiac Screening"]
+            return "Неопределенный результат", confidence, ["Сердечный скрининг"]
         
         if diagnosis == "Thalasse" and 'Mean Corpuscular Volume' not in input_values:
-            return "Неопределенный результат", confidence, ["Hemoglobin Analysis"]
+            return "Неопределенный результат", confidence, ["Анализ гемоглобина"]
         
         if diagnosis == "Thromboc" and 'Platelets' not in input_values:
-            return "Неопределенный результат", confidence, ["Coagulation Study"]
+            return "Неопределенный результат", confidence, ["Исследование коагуляции"]
         
         if confidence < min_confidence:
-            return "Неопределенный результат", confidence, ["Additional Tests Required"]
+            return "Неопределенный результат", confidence, ["Требуются дополнительные тесты"]
         
         return diagnosis, confidence, get_recommendations(diagnosis, input_values.keys())
     
@@ -485,18 +485,47 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
 def get_recommendations(diagnosis: str, input_keys: List[str]) -> List[str]:
     """Генерирует рекомендации на основе диагноза и введенных параметров"""
     recommendations = {
-        'Healthy': ["Annual Checkup"],
-        'Diabetes': ["Urine Analysis", "Triglycerides", "Endocrinologist Consultation"],
-        'Anemia': ["Ferritin", "Vitamin B12", "Hematologist Consultation"],
-        'Thalasse': ["Hemoglobin Electrophoresis", "Iron Studies", "Genetic Testing"],
-        'Thromboc': ["Coagulation Tests", "D-Dimer", "Hematologist Consultation"],
-        'Heart Di': ["EKG", "Cardiac Enzymes", "Cardiologist Consultation"],
-        'Пограничное состояние (Anemia)': ["Iron Tests", "Follow-up in 1 Month"],
-        'Пограничное состояние (Diabetes)': ["Repeat Glucose Test", "Endocrinologist Consultation"],
-        'Пограничное состояние (Cardio)': ["Lipid Profile", "Cardiologist Consultation"]
+        'Healthy': ["Рекомендуется ежегодный профилактический осмотр"],
+        'Diabetes': [
+            "Анализ мочи на глюкозу и кетоны",
+            "Контроль уровня триглицеридов",
+            "Консультация эндокринолога"
+        ],
+        'Anemia': [
+            "Анализ на ферритин и сывороточное железо",
+            "Исследование уровня витамина B12",
+            "Консультация гематолога"
+        ],
+        'Thalasse': [
+            "Электрофорез гемоглобина",
+            "Исследование уровня железа",
+            "Генетическое тестирование"
+        ],
+        'Thromboc': [
+            "Коагулограмма (анализ свертываемости крови)",
+            "Анализ на D-димер",
+            "Консультация гематолога"
+        ],
+        'Heart Di': [
+            "Электрокардиограмма (ЭКГ)",
+            "Анализ кардиоспецифических ферментов",
+            "Консультация кардиолога"
+        ],
+        'Пограничное состояние (Anemia)': [
+            "Анализ на уровень железа",
+            "Повторное обследование через 1 месяц"
+        ],
+        'Пограничное состояние (Diabetes)': [
+            "Повторный тест на толерантность к глюкозе",
+            "Консультация эндокринолога"
+        ],
+        'Пограничное состояние (Cardio)': [
+            "Липидограмма (анализ липидного профиля)",
+            "Консультация кардиолога"
+        ]
     }
     
-    return recommendations.get(diagnosis, ["Consult with a specialist"])
+    return recommendations.get(diagnosis, ["Рекомендуется консультация специалиста"])
     
 # ================== API Endpoints ==================
 @app.route('/predict_symptoms', methods=['POST'])
@@ -505,27 +534,25 @@ def predict_symptoms():
     try:
         data = request.get_json()
         if 'symptoms' not in data:
-            return jsonify({"error": "Missing 'symptoms' field"}), 400
+            return jsonify({"error": "Отсутствует поле 'symptoms'"}), 400
 
-        # Проверяем валидность симптомов
         valid_symptoms, invalid_symptoms = validate_symptoms(data['symptoms'])
         
         if invalid_symptoms:
             return jsonify({
-                "warning": f"These symptoms are invalid and will be ignored: {', '.join(invalid_symptoms)}",
+                "warning": f"Следующие симптомы будут проигнорированы (не распознаны): {', '.join(invalid_symptoms)}",
                 "valid_symptoms": valid_symptoms
             }), 200
         
         if not valid_symptoms:
-            return jsonify({"error": "No valid symptoms entered. Please check your input."}), 400
+            return jsonify({"error": "Не введено ни одного распознаваемого симптома"}), 400
             
         predicted_disease, probability = given_predicted_value(valid_symptoms)
         
-        # Проверка достоверности предсказания
         confidence = float(probability.strip('%'))
         if confidence < 10.0:
             return jsonify({
-                "warning": "Low prediction confidence. The result may be unreliable.",
+                "warning": "Низкая достоверность предсказания. Результат может быть ненадежным.",
                 "predicted_disease": predicted_disease,
                 "probability": probability
             }), 200
@@ -544,7 +571,7 @@ def predict_symptoms():
         
         return jsonify(response)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Внутренняя ошибка сервера: {str(e)}"}), 500
 
 @app.route('/predict_blood', methods=['POST'])
 def predict_blood():
@@ -552,28 +579,27 @@ def predict_blood():
     try:
         data = request.get_json()
         if 'blood_values' not in data:
-            return jsonify({"error": "Missing 'blood_values' field"}), 400
+            return jsonify({"error": "Отсутствует поле 'blood_values'"}), 400
             
         input_values = data['blood_values']
         
-        # Проверка что все значения числовые
         for key, value in input_values.items():
             try:
                 input_values[key] = float(value)
             except ValueError:
-                return jsonify({"error": f"Invalid value for {key}: must be numeric"}), 400
+                return jsonify({"error": f"Некорректное значение для {key}: должно быть числом"}), 400
         
         diagnosis, confidence, recommendations = safe_predict(input_values)
         
         response = {
             "diagnosis": diagnosis,
-            "confidence": float(confidence),  # преобразуем numpy.float в обычный float
+            "confidence": float(confidence),
             "recommendations": recommendations
         }
         
         return jsonify(response)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Внутренняя ошибка сервера: {str(e)}"}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():
