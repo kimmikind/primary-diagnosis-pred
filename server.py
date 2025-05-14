@@ -360,7 +360,7 @@ def safe_predict(input_values: dict, min_confidence: float = 0.8) -> Tuple[str, 
     try:
         # 1. Проверка минимального количества показателей
         if len(input_values) < 2:
-            return "Недостаточно данных", 0.0, ["Введите минимум 2 показателя"]
+            return "Input values are less than two", 0.0, ["Введите минимум 2 показателя"]
         
         # 2. Проверка нормальных диапазонов
         normal_count = 0
@@ -534,25 +534,25 @@ def predict_symptoms():
     try:
         data = request.get_json()
         if 'symptoms' not in data:
-            return jsonify({"error": "Отсутствует поле 'symptoms'"}), 400
+            return jsonify({"error": "Missing 'symptoms' field'"}), 400
 
         valid_symptoms, invalid_symptoms = validate_symptoms(data['symptoms'])
         
         if invalid_symptoms:
             return jsonify({
-                "warning": f"Следующие симптомы будут проигнорированы (не распознаны): {', '.join(invalid_symptoms)}",
+                "warning": f"These symptoms are invalid and will be ignored: {', '.join(invalid_symptoms)}",
                 "valid_symptoms": valid_symptoms
             }), 400
         
         if not valid_symptoms:
-            return jsonify({"error": "Не введено ни одного распознаваемого симптома"}), 400
+            return jsonify({"error": "No valid symptoms entered. Please check your input."}), 400
             
         predicted_disease, probability = given_predicted_value(valid_symptoms)
         
         confidence = float(probability.strip('%'))
         if confidence < 5.0:
             return jsonify({
-                "warning": "Низкая достоверность предсказания. Результат может быть ненадежным.",
+                "warning": "Low prediction confidence. The result may be unreliable.",
                 "predicted_disease": predicted_disease,
                 "probability": probability
             }), 400
@@ -571,7 +571,7 @@ def predict_symptoms():
         
         return jsonify(response)
     except Exception as e:
-        return jsonify({"error": f"Внутренняя ошибка сервера: {str(e)}"}), 500
+        return jsonify({"error": f"{str(e)}"}), 500
 
 @app.route('/predict_blood', methods=['POST'])
 def predict_blood():
@@ -579,7 +579,7 @@ def predict_blood():
     try:
         data = request.get_json()
         if 'blood_values' not in data:
-            return jsonify({"error": "Отсутствует поле 'blood_values'"}), 400
+            return jsonify({"error": "Missing 'blood_values' field'"}), 400
             
         input_values = data['blood_values']
         
@@ -587,7 +587,7 @@ def predict_blood():
             try:
                 input_values[key] = float(value)
             except ValueError:
-                return jsonify({"error": f"Некорректное значение для {key}: должно быть числом"}), 400
+                return jsonify({"error": f"Invalid value for {key}: must be numeric"}), 400
         
         diagnosis, confidence, recommendations = safe_predict(input_values)
         
@@ -599,7 +599,7 @@ def predict_blood():
         
         return jsonify(response)
     except Exception as e:
-        return jsonify({"error": f"Внутренняя ошибка сервера: {str(e)}"}), 500
+        return jsonify({"error": f" {str(e)}"}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():
