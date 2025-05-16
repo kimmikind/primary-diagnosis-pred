@@ -47,14 +47,14 @@ def load_datasets():
         description = pd.read_csv('datasets/description.csv')
         precautions = pd.read_csv('datasets/precautions_df.csv')
         # Читаем без заголовков и пропускаем первую строку
-        #workout_raw = pd.read_csv('datasets/workout_df.csv', header=0, encoding='utf-8-sig')
+        workout_raw = pd.read_csv('datasets/workout_df.csv', header=None, skiprows=1, encoding='utf-8-sig')
         # Разбиваем по первой запятой
-        #workout = workout_raw[0].str.split(',', n=1, expand=True)
-        #workout.columns = ['Disease', 'Workout']
+        workout = workout_raw[0].str.split(',', n=1, expand=True)
+        workout.columns = ['Disease', 'Workout']
         # Очищаем от лишнего
-        #workout['Disease'] = workout['Disease'].str.strip()
-        #workout['Workout'] = workout['Workout'].str.strip()
-        workout = pd.read_csv('datasets/workout_df.csv')
+        workout['Disease'] = workout['Disease'].str.strip()
+        workout['Workout'] = workout['Workout'].str.strip()
+        #workout = pd.read_csv('datasets/workout_df.csv')
         medications = pd.read_csv('datasets/medications.csv')
         diets = pd.read_csv('datasets/diets.csv')
         symp_severity = pd.read_csv('datasets/Symptom-severity.csv')
