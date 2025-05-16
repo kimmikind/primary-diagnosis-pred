@@ -733,19 +733,19 @@ def predict_symptoms():
     try:
         data = request.get_json()
         if 'symptoms' not in data:
-            return jsonify({"error": "Отсутствует поле 'symptoms'"}), 400
+            return jsonify({"error": "Missing 'symptoms' field"}), 400
          # Переводим русские симптомы в английские
         valid_symptoms, invalid_symptoms = translate_symptoms(data['symptoms'])
 
                 
         if invalid_symptoms:
             return jsonify({
-                "warning": f"Следующие симптомы не распознаны: {', '.join(invalid_symptoms)}",
+                "warning": f"These symptoms are invalid and will be ignored: {', '.join(invalid_symptoms)}",
                 "valid_symptoms": [symptoms_translation.get(s, s) for s in valid_symptoms]
             }), 400
         
         if not valid_symptoms:
-            return jsonify({"error": "Не введено ни одного распознаваемого симптома"}), 400
+            return jsonify({"error": "No valid symptoms entered. Please check your input."}), 400
             
         predicted_disease, probability = given_predicted_value(valid_symptoms)
         
@@ -755,7 +755,7 @@ def predict_symptoms():
         confidence = float(probability.strip('%'))
         if confidence < 5.0:
             return jsonify({
-                "warning": "Низкая достоверность предсказания. Результат может быть ненадежным.",
+                "warning": "Low prediction confidence. The result may be unreliable.",
                 "predicted_disease": predicted_disease,
                 "probability": probability
             }), 400
@@ -775,7 +775,7 @@ def predict_symptoms():
         
         return jsonify(response)
     except Exception as e:
-        return jsonify({"error": f"Внутренняя ошибка сервера: {str(e)}"}), 500
+        return jsonify({"error": f" {str(e)}"}), 500
 
 @app.route('/predict_blood', methods=['POST'])
 def predict_blood():
