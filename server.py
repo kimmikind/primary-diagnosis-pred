@@ -46,15 +46,21 @@ def load_datasets():
     try:
         description = pd.read_csv('datasets/description.csv')
         precautions = pd.read_csv('datasets/precautions_df.csv')
-        # Читаем без заголовков и пропускаем первую строку
-        workout_raw = pd.read_csv('datasets/workout_df.csv', header=None, skiprows=1, encoding='utf-8-sig')
-        # Разбиваем по первой запятой
-        workout = workout_raw[0].str.split(',', n=1, expand=True)
+        # Исправленная загрузка workout_df
+        workout = pd.read_csv(
+            'datasets/workout_df.csv',
+            quotechar='"',  # Указываем, что значения в кавычках
+            skipinitialspace=True,  # Игнорируем пробелы после разделителя
+            encoding='utf-8-sig'  # Для корректного чтения UTF-8 с BOM
+        )
+        
+        # Убедимся, что названия столбцов правильные
         workout.columns = ['Disease', 'Workout']
-        # Очищаем от лишнего
+        
+        # Очистка данных
         workout['Disease'] = workout['Disease'].str.strip()
         workout['Workout'] = workout['Workout'].str.strip()
-        #workout = pd.read_csv('datasets/workout_df.csv')
+        
         medications = pd.read_csv('datasets/medications.csv')
         diets = pd.read_csv('datasets/diets.csv')
         symp_severity = pd.read_csv('datasets/Symptom-severity.csv')
