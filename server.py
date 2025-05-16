@@ -44,12 +44,20 @@ except Exception as e:
 # Загрузка датасетов
 def load_datasets():
     try:
-        description = pd.read_csv('datasets/description.csv')
-        precautions = pd.read_csv('datasets/precautions_df.csv')
-        workout = pd.read_csv('datasets/workout_df.csv')
-        medications = pd.read_csv('datasets/medications.csv')
-        diets = pd.read_csv('datasets/diets.csv')
-        symp_severity = pd.read_csv('datasets/Symptom-severity.csv')
+        description = pd.read_csv('C:/datasets/description.csv')
+        precautions = pd.read_csv('C:/datasets/precautions_df.csv')
+        # Читаем без заголовков и пропускаем первую строку
+        workout_raw = pd.read_csv('C:/datasets/workout_df.csv', header=None, skiprows=1, engine='python')
+        # Разбиваем по первой запятой
+        workout = workout_raw[0].str.split(',', n=1, expand=True)
+        workout.columns = ['Disease', 'Workout']
+        # Очищаем от лишнего
+        workout['Disease'] = workout['Disease'].str.strip()
+        workout['Workout'] = workout['Workout'].str.strip()
+        #workout = pd.read_csv('C:/datasets/workout_df.csv')
+        medications = pd.read_csv('C:/datasets/medications.csv')
+        diets = pd.read_csv('C:/datasets/diets.csv')
+        symp_severity = pd.read_csv('C:/datasets/Symptom-severity.csv')
         
         return description, precautions, workout, medications, diets, symp_severity
     except Exception as e:
@@ -62,6 +70,182 @@ except Exception as e:
     print(f"Failed to load datasets: {e}")
     raise
 
+symptoms_translation = {
+    'зуд': 'itching',
+    'кожная сыпь': 'skin rash',
+    'узелковые высыпания на коже': 'nodal skin eruptions',
+    'постоянное чихание': 'continuous sneezing',
+    'озноб': 'shivering',
+    'дрожь': 'chills',
+    'боль в суставах': 'joint pain',
+    'боль в животе': 'stomach pain',
+    'повышенная кислотность': 'acidity',
+    'язвы на языке': 'ulcers on tongue',
+    'истощение мышц': 'muscle wasting',
+    'рвота': 'vomiting',
+    'жжение при мочеиспускании': 'burning micturition',
+    'частое мочеиспускание небольшими порциями': 'spotting urination',
+    'усталость': 'fatigue',
+    'увеличение массы тела': 'weight gain',
+    'тревожность': 'anxiety',
+    'холодные руки и ноги': 'cold hands and feets',
+    'перепады настроения': 'mood swings',
+    'потеря веса': 'weight loss',
+    'беспокойство': 'restlessness',
+    'вялость': 'lethargy',
+    'пятна в горле': 'patches in throat',
+    'нерегулярный уровень сахара в крови': 'irregular sugar level',
+    'кашель': 'cough',
+    'высокая температура': 'high fever',
+    'запавшие глаза': 'sunken eyes',
+    'одышка': 'breathlessness',
+    'потоотделение': 'sweating',
+    'обезвоживание': 'dehydration',
+    'несварение': 'indigestion',
+    'головная боль': 'headache',
+    'желтоватый цвет кожи': 'yellowish skin',
+    'тёмная моча': 'dark urine',
+    'тошнота': 'nausea',
+    'потеря аппетита': 'loss of appetite',
+    'боль за глазами': 'pain behind the eyes',
+    'боль в спине': 'back pain',
+    'запор': 'constipation',
+    'боль в животе': 'abdominal pain',
+    'диарея': 'diarrhoea',
+    'слабая температура': 'mild fever',
+    'жёлтая моча': 'yellow urine',
+    'пожелтение глаз': 'yellowing of eyes',
+    'острая печёночная недостаточность': 'acute liver failure',
+    'скопление жидкости': 'fluid overload',
+    'вздутие живота': 'swelling of stomach',
+    'увеличенные лимфоузлы': 'swelled lymph nodes',
+    'недомогание': 'malaise',
+    'размытое и искажённое зрение': 'blurred and distorted vision',
+    'мокрота': 'phlegm',
+    'раздражение горла': 'throat irritation',
+    'покраснение глаз': 'redness of eyes',
+    'давление в пазухах': 'sinus pressure',
+    'насморк': 'runny nose',
+    'заложенность носа': 'congestion',
+    'боль в груди': 'chest pain',
+    'слабость в конечностях': 'weakness in limbs',
+    'учащённое сердцебиение': 'fast heart rate',
+    'боль при дефекации': 'pain during bowel movements',
+    'боль в области ануса': 'pain in anal region',
+    'кровь в стуле': 'bloody stool',
+    'раздражение в области ануса': 'irritation in anus',
+    'боль в шее': 'neck pain',
+    'головокружение': 'dizziness',
+    'судороги': 'cramps',
+    'синяки': 'bruising',
+    'ожирение': 'obesity',
+    'отеки ног': 'swollen legs',
+    'вздутые кровеносные сосуды': 'swollen blood vessels',
+    'одутловатое лицо и глаза': 'puffy face and eyes',
+    'увеличенная щитовидная железа': 'enlarged thyroid',
+    'ломкие ногти': 'brittle nails',
+    'отеки конечностей': 'swollen extremeties',
+    'повышенный аппетит': 'excessive hunger',
+    'внебрачные половые контакты': 'extra marital contacts',
+    'сухость и покалывание губ': 'drying and tingling lips',
+    'нечёткая речь': 'slurred speech',
+    'боль в коленях': 'knee pain',
+    'боль в тазобедренном суставе': 'hip joint pain',
+    'мышечная слабость': 'muscle weakness',
+    'ригидность шеи': 'stiff neck',
+    'опухание суставов': 'swelling joints',
+    'скованность движений': 'movement stiffness',
+    'ощущение вращения': 'spinning movements',
+    'потеря равновесия': 'loss of balance',
+    'неустойчивость': 'unsteadiness',
+    'слабость одной стороны тела': 'weakness of one body side',
+    'потеря обоняния': 'loss of smell',
+    'дискомфорт в мочевом пузыре': 'bladder discomfort',
+    'зловонный запах мочи': 'foul smell of urine',
+    'постоянное ощущение желания мочеиспускания': 'continuous feel of urine',
+    'выделение газов': 'passage of gases',
+    'внутренний зуд': 'internal itching',
+    'токсичный вид (тифозный)': 'toxic look (typhos)',
+    'депрессия': 'depression',
+    'раздражительность': 'irritability',
+    'мышечная боль': 'muscle pain',
+    'изменённое сознание': 'altered sensorium',
+    'красные пятна на теле': 'red spots over body',
+    'аномальные менструации': 'abnormal menstruation',
+    'обесцвеченные пятна': 'dischromic patches',
+    'слезотечение': 'watering from eyes',
+    'частое мочеиспускание': 'polyuria',
+    'наследственность': 'family history',
+    'слизистая мокрота': 'mucoid sputum',
+    'ржавая мокрота': 'rusty sputum',
+    'снижение концентрации внимания': 'lack of concentration',
+    'зрительные нарушения': 'visual disturbances',
+    'переливание крови': 'receiving blood transfusion',
+    'инъекции нестерильными инструментами': 'receiving unsterile injections',
+    'кома': 'coma',
+    'желудочное кровотечение': 'stomach bleeding',
+    'вздутие живота': 'distention of abdomen',
+    'употребление алкоголя в анамнезе': 'history of alcohol consumption',
+    'скопление жидкости': 'fluid overload.1',
+    'кровь в мокроте': 'blood in sputum',
+    'выступающие вены на икре': 'prominent veins on calf',
+    'сердцебиение': 'palpitations',
+    'боль при ходьбе': 'painful walking',
+    'гнойные прыщи': 'pus filled pimples',
+    'чёрные точки': 'blackheads',
+    'шелушение кожи': 'scurring',
+    'шелушение кожи': 'skin peeling',
+    'серебристое шелушение': 'silver like dusting',
+    'углубления на ногтях': 'small dents in nails',
+    'воспалённые ногти': 'inflammatory nails',
+    'пузырь': 'blister',
+    'красная болезненная область вокруг носа': 'red sore around nose',
+    'жёлтые корки с выделениями': 'yellow crust ooze'
+}
+
+diseases_translation = {
+    '(vertigo) Paroymsal Positional Vertigo': 'Головокружение (Пароксизмальное позиционное)',
+    'AIDS': 'СПИД',
+    'Acne': 'Акне',
+    'Alcoholic hepatitis': 'Алкогольный гепатит',
+    'Allergy': 'Аллергия',
+    'Arthritis': 'Артрит',
+    'Bronchial Asthma': 'Бронхиальная астма',
+    'Cervical spondylosis': 'Шейный спондилёз',
+    'Chicken pox': 'Ветряная оспа',
+    'Chronic cholestasis': 'Хронический холестаз',
+    'Common Cold': 'Простуда',
+    'Dengue': 'Денге',
+    'Diabetes': 'Сахарный диабет',
+    'Dimorphic hemmorhoids(piles)': 'Смешанные геморроидальные узлы (геморрой)',
+    'Drug Reaction': 'Лекарственная реакция',
+    'Fungal infection': 'Грибковая инфекция',
+    'GERD': 'ГЭРБ (гастроэзофагеальная рефлюксная болезнь)',
+    'Gastroenteritis': 'Гастроэнтерит',
+    'Heart attack': 'Сердечный приступ',
+    'Hepatitis B': 'Гепатит B',
+    'Hepatitis C': 'Гепатит C',
+    'Hepatitis D': 'Гепатит D',
+    'Hepatitis E': 'Гепатит E',
+    'Hypertension': 'Гипертония',
+    'Hyperthyroidism': 'Гипертиреоз',
+    'Hypoglycemia': 'Гипогликемия',
+    'Hypothyroidism': 'Гипотиреоз',
+    'Impetigo': 'Импетиго',
+    'Jaundice': 'Желтуха',
+    'Malaria': 'Малярия',
+    'Migraine': 'Мигрень',
+    'Osteoarthristis': 'Остеоартрит',
+    'Paralysis (brain hemorrhage)': 'Паралич (кровоизлияние в мозг)',
+    'Peptic ulcer diseae': 'Язвенная болезнь',
+    'Pneumonia': 'Пневмония',
+    'Psoriasis': 'Псориаз',
+    'Tuberculosis': 'Туберкулёз',
+    'Typhoid': 'Тиф',
+    'Urinary tract infection': 'Инфекция мочевых путей',
+    'Varicose veins': 'Варикозное расширение вен',
+    'hepatitis A': 'Гепатит A'
+}
 # Словарь симптомов
 symptoms_dict = {
     'itching': 0,
@@ -275,21 +459,28 @@ NORMAL_RANGES = {
 class SymptomsRequest(BaseModel):
     symptoms: str
 
-def validate_symptoms(user_input: str) -> Tuple[List[str], List[str]]:
-    """Проверяет введенные симптомы на валидность"""
+def translate_symptoms(russian_symptoms: str) -> Tuple[List[str], List[str]]:
+    """Переводит русские симптомы в английские"""
     valid_symptoms = []
     invalid_symptoms = []
     
-    # Разделяем ввод и очищаем симптомы
-    input_symptoms = [s.strip().lower() for s in user_input.split(',') if s.strip()]
+    input_symptoms = [s.strip().lower() for s in russian_symptoms.split(',') if s.strip()]
     
     for symptom in input_symptoms:
-        if symptom in symptoms_dict:
-            valid_symptoms.append(symptom)
+        if symptom in symptoms_translation:
+            eng_symptom = symptoms_translation[symptom]
+            if eng_symptom in symptoms_dict:
+                valid_symptoms.append(eng_symptom)
+            else:
+                invalid_symptoms.append(symptom)
         else:
             invalid_symptoms.append(symptom)
     
     return valid_symptoms, invalid_symptoms
+
+def translate_diagnosis(english_diagnosis: str) -> str:
+    """Переводит диагноз с английского на русский"""
+    return diseases_translation.get(english_diagnosis, english_diagnosis)
 
 def helper(dis: str) -> Tuple[str, List[str], List[str], List[str], List[str]]:
     """Функция для получения описания болезни, рекомендаций, лекарств, диеты и упражнений"""
@@ -297,43 +488,45 @@ def helper(dis: str) -> Tuple[str, List[str], List[str], List[str], List[str]]:
         # Нормализация названия болезни
         dis = dis.strip().lower()
         
-        # Описание болезни
+        
+       # Описание болезни
         desc = description[description['Disease'].str.lower() == dis]['Description']
         desc = " ".join([str(w) for w in desc]) if not desc.empty else "No description available"
-        
+
         # Меры предосторожности
         pre_df = precautions[precautions['Disease'].str.lower() == dis][['Precaution_1', 'Precaution_2', 'Precaution_3', 'Precaution_4']]
         pre = []
         if not pre_df.empty:
             pre = [str(p) for p in pre_df.values[0] if pd.notna(p)]
-        
+
         # Безопасное извлечение списка лекарств (без eval)
         med = []
         med_df = medications[medications['Disease'].str.lower() == dis]['Medication']
         if not med_df.empty and pd.notna(med_df.values[0]):
             med_str = med_df.values[0].strip("[]").replace("'", "")
             med = [m.strip() for m in med_str.split(",")]
-        
+
         # Безопасное извлечение списка диет
         die = []
         die_df = diets[diets['Disease'].str.lower() == dis]['Diet']
         if not die_df.empty and pd.notna(die_df.values[0]):
             die_str = die_df.values[0].strip("[]").replace("'", "")
             die = [d.strip() for d in die_str.split(",")]
-        
+
         # Безопасное извлечение списка упражнений
         wrkout = []
-        wrkout_df = workout[workout['disease'].str.lower() == dis]['workout']
+        wrkout_df = workout[workout['Disease'].str.lower() == dis]['Workout']
         if not wrkout_df.empty and pd.notna(wrkout_df.values[0]):
-            wrkout_str = wrkout_df.values[0].strip("[]").replace("'", "")
-            wrkout = [w.strip() for w in wrkout_str.split(",")]
-        
+            # Удаляем внешние кавычки и квадратные скобки
+            wrkout_str = wrkout_df.values[0].strip('"[]')
+            # Разделяем по запятым, учитывая возможные кавычки
+            wrkout = [w.strip().strip("'\"") for w in wrkout_str.split("', ")]
         return desc, pre, med, die, wrkout
-    
+        
     except Exception as e:
         print(f"Error in helper function for disease '{dis}': {e}")
         return f"Error loading data for {dis}", [], [], [], []
-
+        
 def given_predicted_value(patient_symptoms: List[str]) -> Tuple[str, str]:
     """Функция для предсказания болезни на основе симптомов"""
     try:
@@ -534,33 +727,38 @@ def predict_symptoms():
     try:
         data = request.get_json()
         if 'symptoms' not in data:
-            return jsonify({"error": "Missing 'symptoms' field'"}), 400
+            return jsonify({"error": "Отсутствует поле 'symptoms'"}), 400
+         # Переводим русские симптомы в английские
+        valid_symptoms, invalid_symptoms = translate_symptoms(data['symptoms'])
 
-        valid_symptoms, invalid_symptoms = validate_symptoms(data['symptoms'])
-        
+                
         if invalid_symptoms:
             return jsonify({
-                "warning": f"These symptoms are invalid and will be ignored: {', '.join(invalid_symptoms)}",
-                "valid_symptoms": valid_symptoms
+                "warning": f"Следующие симптомы не распознаны: {', '.join(invalid_symptoms)}",
+                "valid_symptoms": [symptoms_translation.get(s, s) for s in valid_symptoms]
             }), 400
         
         if not valid_symptoms:
-            return jsonify({"error": "No valid symptoms entered. Please check your input."}), 400
+            return jsonify({"error": "Не введено ни одного распознаваемого симптома"}), 400
             
         predicted_disease, probability = given_predicted_value(valid_symptoms)
+        
+        # Переводим диагноз на русский
+        translated_diagnosis = translate_diagnosis(predicted_disease)
         
         confidence = float(probability.strip('%'))
         if confidence < 5.0:
             return jsonify({
-                "warning": "Low prediction confidence. The result may be unreliable.",
+                "warning": "Низкая достоверность предсказания. Результат может быть ненадежным.",
                 "predicted_disease": predicted_disease,
                 "probability": probability
             }), 400
         
         desc, pre, med, die, wrkout = helper(predicted_disease)
         
+            
         response = {
-            "predicted_disease": predicted_disease,
+            "predicted_disease": translated_diagnosis,
             "probability": probability,
             "description": desc,
             "precautions": pre,
@@ -571,7 +769,7 @@ def predict_symptoms():
         
         return jsonify(response)
     except Exception as e:
-        return jsonify({"error": f"{str(e)}"}), 500
+        return jsonify({"error": f"Внутренняя ошибка сервера: {str(e)}"}), 500
 
 @app.route('/predict_blood', methods=['POST'])
 def predict_blood():
