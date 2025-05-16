@@ -47,7 +47,7 @@ def load_datasets():
         description = pd.read_csv('datasets/description.csv')
         precautions = pd.read_csv('datasets/precautions_df.csv')
         # Читаем без заголовков и пропускаем первую строку
-        workout_raw = pd.read_csv('datasets/workout_df.csv', header=None, skiprows=1, engine='python')
+        workout_raw = pd.read_csv('datasets/workout_df.csv', header=None, skiprows=1, engine='python',encoding='utf-8-sig')
         # Разбиваем по первой запятой
         workout = workout_raw[0].str.split(',', n=1, expand=True)
         workout.columns = ['Disease', 'Workout']
